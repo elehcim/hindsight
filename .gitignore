@@ -1,0 +1,22 @@
+# Local VS Code MCP configuration
+/.vscode/mcp.json
+
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+*.env
+.envrc
+secrets/
+*.key
+*.pem
+*.p12
+*.pfx
+*.jks
+*.keystore
+
+# Database backups and local caches
+backups/
+*.dump
+*.sql.gz
+__pycache__/

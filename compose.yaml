@@ -1,0 +1,75 @@
+name: hindsight-local
+
+services:
+  hindsight:
+    image: ghcr.io/vectorize-io/hindsight:1.1.0@sha256:50311d02b4d5d2b7c5242bd336edf8735df8374eaad496a92f49c83b37d2aa06
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 45s
+    cpus: 2.0
+    mem_limit: 2500m
+    memswap_limit: 3g
+    ports:
+      - "127.0.0.1:${HINDSIGHT_API_PORT:-8888}:8888"
+      - "127.0.0.1:${HINDSIGHT_UI_PORT:-9999}:9999"
+    environment:
+      HOME: /home/hindsight
+      COPILOT_GITHUB_TOKEN: ${COPILOT_GITHUB_TOKEN:-}
+      HINDSIGHT_API_LLM_PROVIDER: ${HINDSIGHT_API_LLM_PROVIDER:-github-copilot}
+      HINDSIGHT_API_LLM_MODEL: ${HINDSIGHT_API_LLM_MODEL:-gpt-6-luna}
+      HINDSIGHT_API_LLM_API_KEY: ${HINDSIGHT_API_LLM_API_KEY:-}
+      HINDSIGHT_API_LLM_BASE_URL: ${HINDSIGHT_API_LLM_BASE_URL:-}
+      HINDSIGHT_API_LLM_REASONING_EFFORT:
+      HINDSIGHT_API_RETAIN_LLM_PROVIDER:
+      HINDSIGHT_API_RETAIN_LLM_MODEL:
+      HINDSIGHT_API_RETAIN_LLM_REASONING_EFFORT:
+      HINDSIGHT_API_RETAIN_LLM_BASE_URL:
+      HINDSIGHT_API_RETAIN_LLM_API_KEY:
+      HINDSIGHT_API_REFLECT_LLM_PROVIDER:
+      HINDSIGHT_API_REFLECT_LLM_MODEL:
+      HINDSIGHT_API_REFLECT_LLM_REASONING_EFFORT:
+      HINDSIGHT_API_REFLECT_LLM_BASE_URL:
+      HINDSIGHT_API_REFLECT_LLM_API_KEY:
+      HINDSIGHT_API_CONSOLIDATION_LLM_PROVIDER:
+      HINDSIGHT_API_CONSOLIDATION_LLM_MODEL:
+      HINDSIGHT_API_CONSOLIDATION_LLM_REASONING_EFFORT:
+      HINDSIGHT_API_CONSOLIDATION_LLM_BASE_URL:
+      HINDSIGHT_API_CONSOLIDATION_LLM_API_KEY:
+      HINDSIGHT_API_LLM_MAX_CONCURRENT: "1"
+      HINDSIGHT_API_LLM_MAX_RETRIES: "1"
+      HINDSIGHT_API_LLM_TIMEOUT: "120"
+      HINDSIGHT_API_WORKER_ID: hindsight-local
+      HINDSIGHT_API_RETAIN_MAX_CONCURRENT: "1"
+      HINDSIGHT_API_RECALL_MAX_CONCURRENT: "2"
+      HINDSIGHT_API_ENABLE_OBSERVATIONS: ${HINDSIGHT_API_ENABLE_OBSERVATIONS:-false}
+      HINDSIGHT_API_EMBEDDINGS_PROVIDER: local
+      HINDSIGHT_API_EMBEDDINGS_LOCAL_MODEL: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+      HINDSIGHT_API_EMBEDDINGS_LOCAL_FORCE_CPU: "true"
+      HINDSIGHT_API_RERANKER_PROVIDER: rrf
+      HINDSIGHT_API_MODEL_INIT_TIMEOUT: "1200"
+      HINDSIGHT_CP_DATAPLANE_API_URL: http://127.0.0.1:8888
+      OMP_NUM_THREADS: "2"
+      MKL_NUM_THREADS: "2"
+      OPENBLAS_NUM_THREADS: "2"
+      TOKENIZERS_PARALLELISM: "false"
+      HF_HUB_DISABLE_TELEMETRY: "1"
+      HF_HUB_DISABLE_XET: "1"
+      DO_NOT_TRACK: "1"
+    volumes:
+      - pg_data:/home/hindsight/.pg0
+      - model_cache:/home/hindsight/.cache
+    healthcheck:
+      test: ["CMD", "python3", "-m", "hindsight_api.http_probe", "http://127.0.0.1:8888/health", "5"]
+      interval: 15s
+      timeout: 10s
+      start_period: 21m
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  pg_data:
+  model_cache:
