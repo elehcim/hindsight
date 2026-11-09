@@ -1,7 +1,6 @@
 # Local Hindsight for VS Code
 
-Hindsight **1.1.0** runs as a Docker service outside the editor, with an image
-pinned by digest, embedded PostgreSQL, and a persistent model cache.
+Hindsight runs as a Docker service outside the editor with embedded PostgreSQL, and a persistent model cache.
 The stable worker identity (`hindsight-local`) allows asynchronous operations
 to resume after container recreation. Do not run two instances with the same
 worker identity against the same database.
@@ -171,10 +170,9 @@ in the container metadata:
 mkdir -p backups
 chmod 700 backups
 docker compose stop
-docker run --rm \
-  -v hindsight-local_pg_data:/data:ro \
-  --entrypoint tar ghcr.io/vectorize-io/hindsight:1.1.0@sha256:50311d02b4d5d2b7c5242bd336edf8735df8374eaad496a92f49c83b37d2aa06 \
-  -C /data -czf - . > backups/pg_data.tar.gz
+docker compose run --rm --no-deps -T \
+  --entrypoint tar hindsight \
+  -C /home/hindsight/.pg0 -czf - . > backups/pg_data.tar.gz
 chmod 600 backups/pg_data.tar.gz
 docker compose start --wait --wait-timeout 1200
 ```
@@ -197,10 +195,9 @@ compatible with PostgreSQL:
 4. With the service stopped, restore **only to a new, empty volume**:
 
    ```sh
-   docker run --rm -i \
-     -v hindsight-local_pg_data:/data \
-     --entrypoint tar ghcr.io/vectorize-io/hindsight:1.1.0@sha256:50311d02b4d5d2b7c5242bd336edf8735df8374eaad496a92f49c83b37d2aa06 \
-     -C /data -xzf - < backups/pg_data.tar.gz
+   docker compose run --rm --no-deps -T \
+     --entrypoint tar hindsight \
+     -C /home/hindsight/.pg0 -xzf - < backups/pg_data.tar.gz
    docker compose up -d --wait --wait-timeout 1200
    ```
 
@@ -233,4 +230,4 @@ the editor.
 ## References
 
 - [Hindsight MCP](https://hindsight.vectorize.io/developer/mcp-server)
-- [Official GitHub Copilot integration](https://github.com/vectorize-io/hindsight/tree/v1.1.0/hindsight-integrations/github-copilot)
+- [Official GitHub Copilot integration](https://github.com/vectorize-io/hindsight/tree/main/hindsight-integrations/github-copilot)
