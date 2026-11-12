@@ -88,6 +88,32 @@ and `project-b`. Avoid using only a directory name that could collide with
 another project. One bank per repository is a good default; a monorepo can
 share a bank. This setup does not use a shared global bank.
 
+### Provision a bank before connecting
+
+Adding a project-specific MCP URL does not provision its bank. In particular,
+do not rely on the first `recall` or `retain` to create a missing bank: reads
+and recall may return `Bank not found`. Explicitly create it through a
+bank-management MCP connection with `update_bank`, or use the REST API:
+
+```sh
+API=http://127.0.0.1:8888
+BANK=project-a
+
+curl -fsS -X PUT "$API/v1/default/banks/$BANK" \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"project-a","enable_observations":false}'
+
+curl -fsS "$API/v1/default/banks/$BANK/stats"
+```
+
+The REST `PUT` is a create-or-update operation: choose a new bank ID, or
+deliberately update an existing bank. The stats request should return that
+bank's ID (and initially zero memories). Replace `project-a` consistently in
+the bank ID, name, and the project's MCP URL. Only after verifying the bank,
+point the project at `http://127.0.0.1:8888/mcp/project-a/`.
+
+### Connect this workspace
+
 For this workspace:
 
 1. If `.vscode/mcp.json` does not exist, copy the
@@ -139,13 +165,13 @@ the following entry into `servers` in the project's MCP file:
 }
 ```
 
-The first retain creates a missing bank. The instructions guide recall and
-retain; **this is not an automatic chat archive**. It does not import past
-conversations or guarantee a save on every turn. Tool availability and
-instruction adherence depend on the client and agent. With Copilot SDK/CLI in
-VS Code, verify that the client imports the workspace MCP servers and actually
-exposes the tools; the file alone does not guarantee this. For multi-root
-workspaces, prefer separate windows when strictly distinct context is needed.
+After provisioning and connecting, the instructions guide recall and retain;
+**this is not an automatic chat archive**. It does not import past conversations
+or guarantee a save on every turn. Tool availability and instruction adherence
+depend on the client and agent. With Copilot SDK/CLI in VS Code, verify that the
+client imports the workspace MCP servers and actually exposes the tools; the
+file alone does not guarantee this. For multi-root workspaces, prefer separate
+windows when strictly distinct context is needed.
 
 Banks separate context, but **are not an authorization boundary**: any local
 process or user can access this instance through its API and dashboard. Ports
